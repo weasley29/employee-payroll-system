@@ -1,0 +1,49 @@
+pipeline {
+    agent any
+
+    environment {
+        DOCKER_IMAGE = "epms-backend"
+    }
+
+    stages {
+
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Build Backend') {
+            steps {
+                sh 'cd backend && npm install'
+            }
+        }
+
+        stage('Test') {
+            steps {
+                sh 'echo "No tests configured"'
+            }
+        }
+
+        stage('Docker Build') {
+            steps {
+                sh 'cd backend && docker build -t epms-backend .'
+            }
+        }
+
+        stage('Run Docker Container') {
+            steps {
+                sh '''
+                docker ps -q --filter "name=epms-backend" | grep -q . && docker stop epms-backend && docker rm epms-backend || echo "No previous container"
+                docker run -d --name epms-backend -p 4000:4000 epms-backend
+                '''
+            }
+        }
+    }
+
+    post {
+        always {
+            echo "Pipeline completed"
+        }
+    }
+}
